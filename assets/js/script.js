@@ -1,13 +1,10 @@
-window.onload = () => {
-    let places = staticLoadPlaces();
-    renderPlaces(places);
-};
+const loadPlaces = function (coords) {
+    // COMMENT FOLLOWING LINE IF YOU WANT TO USE STATIC DATA AND ADD COORDINATES IN THE FOLLOWING 'PLACES' ARRAY
+    const method = 'static';
 
-function staticLoadPlaces() {
-    return [
+    const PLACES = [
         {
             name: 'Office End 1',
-            linksto: 'http://akqa.com/',
             location: {
                 lat: 25.0905208,
                 lng: 55.1486314,
@@ -15,33 +12,86 @@ function staticLoadPlaces() {
         },
         {
             name: 'Office End 2',
-            linksto: 'http://akqa.com/',
             location: {
                 lat: 25.098015,
                 lng: 55.156384,
             }
         },
     ];
-}
 
-function renderPlaces(places) {
-    let scene = document.querySelector('a-scene');
+    if (method === 'api') {
+        return loadPlaceFromAPIs(coords);
+    }
 
-    places.forEach((place) => {
-        const latitude = place.location.lat;
-        const longitude = place.location.lng;
+    return PLACES;
+};
 
-        // add place name
-        const placeText = document.createElement('a-link');
-        placeText.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
-        placeText.setAttribute('title', place.name);
-        //placeText.setAttribute('href', place.linksto);
-        placeText.setAttribute('scale', '15 15 15');
+// getting places from REST APIs
+function loadPlaceFromAPIs(position) {
+    const params = {
+        radius: 300,    // search places not farther than this value (in meters)
+        clientId: 'HZIJGI4COHQ4AI45QXKCDFJWFJ1SFHYDFCCWKPIJDWHLVQVZ',
+        clientSecret: 'GYRKWWJMO2WK3KIRWBXIN5FQAWXTVFIK2QM4VQWNQ4TRAKWH',
+        version: '20300101',    // foursquare versioning, required but unuseful for this demo
+    };
 
-        placeText.addEventListener('loaded', () => {
-            window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'))
-        });
+    // CORS Proxy to avoid CORS problems
+    const corsProxy = 'https://cors-anywhere.herokuapp.com/';
 
-        scene.appendChild(placeText);
-    });
-}
+    // Foursquare API
+    const endpoint = `${corsProxy}https://api.foursquare.com/v2/venues/search?intent=checkin
+        &ll=${position.latitude},${position.longitude}
+        &radius=${params.radius}
+        &client_id=${params.clientId}
+        &client_secret=${params.clientSecret}
+        &limit=15
+        &v=${params.version}`;
+    return fetch(endpoint)
+        .then((res) => {
+            return res.json()
+                .then((resp) => {
+                    return resp.response.venues;
+                })
+        })
+        .catch((err) => {
+            console.error('Error with places API', err);
+        })
+};
+
+
+window.onload = () => {
+    const scene = document.querySelector('a-scene');
+
+    // first get current user location
+    return navigator.geolocation.getCurrentPosition(function (position) {
+
+        // than use it to load from remote APIs some places nearby
+        loadPlaces(position.coords)
+            .then((places) => {
+                places.forEach((place) => {
+                    const latitude = place.location.lat;
+                    const longitude = place.location.lng;
+
+                    // add place name
+                    const text = document.createElement('a-link');
+                    text.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
+                    text.setAttribute('title', place.name);
+                    text.setAttribute('href', 'https://akqa.com/');
+                    text.setAttribute('scale', '13 13 13');
+
+                    text.addEventListener('loaded', () => {
+                        window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'))
+                    });
+
+                    scene.appendChild(text);
+                });
+            })
+    },
+        (err) => console.error('Error in retrieving position', err),
+        {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 27000,
+        }
+    );
+};
