@@ -2,6 +2,15 @@ const loadPlaces = function (coords) {
     // COMMENT FOLLOWING LINE IF YOU WANT TO USE STATIC DATA AND ADD COORDINATES IN THE FOLLOWING 'PLACES' ARRAY
     const method = 'static';
 
+    if (method === 'api') {
+        return loadPlaceFromAPIs(coords);
+    }
+
+    return loadPlaceStatic();
+};
+
+// get the static places
+function loadPlaceStatic() {
     const PLACES = [
         {
             name: 'Office End 1',
@@ -19,12 +28,14 @@ const loadPlaces = function (coords) {
         },
     ];
 
-    if (method === 'api') {
-        return loadPlaceFromAPIs(coords);
-    }
-
-    return PLACES;
-};
+    return new Promise((resolve, reject) => {
+        try {
+            resolve(PLACES)
+        } catch (err) {
+            reject(err)
+        }
+    })
+}
 
 // getting places from REST APIs
 function loadPlaceFromAPIs(position) {
