@@ -1,6 +1,6 @@
 const loadPlaces = function (coords) {
     // COMMENT FOLLOWING LINE IF YOU WANT TO USE STATIC DATA AND ADD COORDINATES IN THE FOLLOWING 'PLACES' ARRAY
-    const method = 'api';
+    const method = 'static';
 
     if (method === 'api') {
         return loadPlaceFromAPIs(coords);
@@ -13,17 +13,38 @@ const loadPlaces = function (coords) {
 function loadPlaceStatic() {
     const PLACES = [
         {
-            name: 'Office End 1',
-            location: {
-                lat: 25.0905208,
-                lng: 55.1486314,
-            }
-        },
-        {
-            name: 'Office End 2',
+            name: 'hug Office',
             location: {
                 lat: 25.098015,
                 lng: 55.156384,
+            }
+        },
+        {
+            name: 'OSN',
+            location: {
+                lat: 25.097025,
+                lng: 55.156681,
+            }
+        },
+        {
+            name: 'UAE Exchange',
+            location: {
+                lat: 25.097199,
+                lng: 55.157918,
+            }
+        },
+        {
+            name: 'Monorail foot bridge',
+            location: {
+                lat: 25.098668,
+                lng: 55.156104,
+            }
+        },
+        {
+            name: 'Royal Mirage',
+            location: {
+                lat: 25.097815,
+                lng: 55.153322,
             }
         },
     ];
@@ -79,6 +100,7 @@ window.onload = () => {
         // than use it to load from remote APIs some places nearby
         loadPlaces(position.coords)
             .then((places) => {
+                alert(position.coords.latitude + " : " + position.coords.longitude);
                 places.forEach((place) => {
                     const latitude = place.location.lat;
                     const longitude = place.location.lng;
